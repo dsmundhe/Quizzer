@@ -4,25 +4,24 @@ import axios from "axios";
 import { Eye, EyeOff } from "lucide-react";
 
 const Signup = () => {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
+
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Handle input change
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -35,6 +34,7 @@ const Signup = () => {
 
     try {
       setLoading(true);
+
       const res = await axios.post(
         "https://quizzer-backend-phi.vercel.app/user/signup",
         {
@@ -44,16 +44,19 @@ const Signup = () => {
         }
       );
 
-      // Assuming backend sends { token, user } on successful signup
-      if (res.data.token && res.data.user) {
-        localStorage.setItem("token", res.data.token);
-        localStorage.setItem("user", JSON.stringify(res.data.user));
+      console.log("Signup response:", res.data);
+
+      if (res.data.msg) {
         setSuccess("Signup successful! Redirecting...");
-        setTimeout(() => navigate("/landingpage"), 1500); // redirect after 1.5s
+        navigate("/login");
+
+        // Hard redirect to landing page
+        // 1 second delay
       } else {
         setError(res.data.msg || "Signup failed");
       }
     } catch (err) {
+      console.error(err);
       setError(err.response?.data?.msg || "Server error");
     } finally {
       setLoading(false);
@@ -63,7 +66,6 @@ const Signup = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-100 via-white to-blue-100 px-4">
       <div className="w-full max-w-md bg-white shadow-lg rounded-2xl p-8 relative">
-        {/* Title */}
         <h2 className="text-2xl md:text-3xl font-bold text-center text-green-600">
           Create an Account ✨
         </h2>
@@ -72,13 +74,11 @@ const Signup = () => {
           practicing quizzes today!
         </p>
 
-        {/* Error/Success messages */}
         {error && <p className="text-red-500 text-center mt-3">{error}</p>}
         {success && (
           <p className="text-green-600 text-center mt-3">{success}</p>
         )}
 
-        {/* Form */}
         <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
           <div>
             <label className="block text-sm font-medium text-gray-700">
@@ -110,7 +110,6 @@ const Signup = () => {
             />
           </div>
 
-          {/* Password */}
           <div className="relative">
             <label className="block text-sm font-medium text-gray-700">
               Password
@@ -137,7 +136,6 @@ const Signup = () => {
             </button>
           </div>
 
-          {/* Confirm Password */}
           <div className="relative">
             <label className="block text-sm font-medium text-gray-700">
               Confirm Password
@@ -164,7 +162,6 @@ const Signup = () => {
             </button>
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
@@ -178,14 +175,12 @@ const Signup = () => {
           </button>
         </form>
 
-        {/* Divider */}
         <div className="flex items-center my-6">
           <hr className="flex-grow border-gray-300" />
           <span className="px-3 text-gray-500 text-sm">or</span>
           <hr className="flex-grow border-gray-300" />
         </div>
 
-        {/* Login Redirect */}
         <p className="text-center text-gray-600 text-sm md:text-base">
           Already have an account?{" "}
           <Link
