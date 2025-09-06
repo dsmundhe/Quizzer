@@ -88,27 +88,9 @@ const LandingPage = () => {
           Explore Quizzes
         </h1>
         <div className="flex gap-3">
-          <button
-            onClick={() => navigate("/score")}
-            className="bg-gradient-to-r from-green-500 to-green-600 text-white px-5 py-2 rounded-2xl font-semibold hover:from-green-600 hover:to-green-700 shadow-lg transition-transform transform hover:scale-105"
-          >
-            My Scores
-          </button>
+        
 
-          {user.email !== "dipakmundhe2026@gmail.com" ? (
-            <>
-              {" "}
-              <button
-                onClick={() => navigate("/addquiz")}
-                className="bg-gradient-to-r from-green-500 to-green-600 text-white px-5 py-2 rounded-2xl font-semibold hover:from-green-600 hover:to-green-700 shadow-lg transition-transform transform hover:scale-105"
-              >
-                + Add Quiz
-              </button>
-            </>
-          ) : (
-            <></>
-          )}
-          {user.email === "dipakmundhe2026@gmail.com" ? (
+          {user !== null ? (
             <>
               {" "}
               <button
@@ -118,10 +100,10 @@ const LandingPage = () => {
                 + Add Quiz
               </button>
               <button
-                onClick={() => navigate("/quizeprompt")}
-                className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-5 py-2 rounded-2xl font-semibold hover:from-indigo-500 hover:to-blue-600 shadow-lg transition-transform transform hover:scale-105"
+                onClick={() => navigate("/score")}
+                className="bg-gradient-to-r from-green-500 to-green-600 text-white px-5 py-2 rounded-2xl font-semibold hover:from-green-600 hover:to-green-700 shadow-lg transition-transform transform hover:scale-105"
               >
-                Quiz Prompt
+                My Scores
               </button>
             </>
           ) : (

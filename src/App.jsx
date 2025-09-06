@@ -10,6 +10,7 @@ import QuizzPrompt from "./Pages/QuizzPrompt/QuizzPrompt";
 import QuizePage from "./Pages/QuizPage/QuizePage";
 import ProfilePage from "./Pages/Profile/ProfilePage";
 import MyScore from "./Pages/My_Scores/MyScore";
+import { Toaster } from "react-hot-toast";
 
 // routes
 
@@ -31,6 +32,7 @@ const App = () => {
 
           <Route path="/score" element={<MyScore />} />
         </Routes>
+        <Toaster position="top-right" reverseOrder={false} />
       </BrowserRouter>
     </div>
   );

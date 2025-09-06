@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-
-// Safe parsing from localStorage
+import toast from "react-hot-toast"; // ✅ add toast
 
 const QuizePage = () => {
   const ques = JSON.parse(localStorage.getItem("questions") || "[]");
@@ -26,18 +25,20 @@ const QuizePage = () => {
     setShowModal(true);
 
     try {
-      const user = JSON.parse(localStorage.getItem("user")); // contains email
-      const token = localStorage.getItem("token"); // stored separately
+      const user = JSON.parse(localStorage.getItem("user"));
+      const token = localStorage.getItem("token");
 
       if (!user?.email || !token) {
-        console.error("User not logged in!");
+        toast.error("⚠️ Please login to save your score!");
         return;
       }
 
+      const loadingToast = toast.loading("Saving your score...");
+
       await axios.post(
-        "https://quizzer-backend-three.vercel.app/score/add", // <-- match your backend route
+        "https://quizzer-backend-three.vercel.app/score",
         {
-          topic: quizTopic, // or dynamically pass topic
+          topic: quizTopic,
           email: user.email,
           score: calculatedScore,
         },
@@ -47,9 +48,11 @@ const QuizePage = () => {
           },
         }
       );
-      console.log("Score stored successfully");
+
+      toast.success("✅ Score saved successfully!", { id: loadingToast });
     } catch (error) {
       console.error("Error storing score:", error);
+      toast.error("❌ Failed to save score!", { id: loadingToast });
     }
   };
 
@@ -58,11 +61,9 @@ const QuizePage = () => {
       {/* Header */}
       <header className="w-full py-6 bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md">
         <h1 className="text-center text-white text-3xl sm:text-4xl font-bold drop-shadow-lg">
-          {quizTitle || "No Title"}
+          {quizTitle}
         </h1>
-        <p className="text-center text-blue-100 mt-1 sm:text-lg">
-          {quizTopic || "No Topic"}
-        </p>
+        <p className="text-center text-blue-100 mt-1 sm:text-lg">{quizTopic}</p>
       </header>
 
       {/* Quiz Content */}
