@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import axios from "axios";
-import toast from "react-hot-toast"; // ✅ add toast
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 const QuizePage = () => {
+  const navigate = useNavigate();
   const ques = JSON.parse(localStorage.getItem("questions") || "[]");
   const quizTitle = localStorage.getItem("quizTitle") || "Quiz";
   const quizTopic = localStorage.getItem("quizTopic") || "Topic";
@@ -176,6 +178,15 @@ const QuizePage = () => {
               className="w-full px-6 py-3 sm:px-8 sm:py-4 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-indigo-400 hover:to-blue-400 text-white font-semibold shadow-lg transition-transform transform hover:scale-105"
             >
               Close
+            </button>
+            <button
+              className="w-full px-6 py-3 mt-5 sm:px-8 sm:py-4 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-indigo-400 hover:to-blue-400 text-white font-semibold shadow-lg transition-transform transform hover:scale-105"
+              onClick={() => {
+                setShowModal(false);
+                navigate("/score");
+              }}
+            >
+              Go Scores
             </button>
           </div>
         </div>
