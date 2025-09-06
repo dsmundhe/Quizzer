@@ -84,7 +84,7 @@ Now generate a **questions array of exactly 30 questions** for the topic: "${for
       }
 
       await axios.post(
-        "https://quizzer-backend-phi.vercel.app/quiz",
+        "https://quizzer-backend-three.vercel.app/quiz",
         {
           email: user.email,
           title: formData.title,

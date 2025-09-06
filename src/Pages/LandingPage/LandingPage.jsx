@@ -29,7 +29,7 @@ const LandingPage = () => {
       setLoading(true);
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `https://quizzer-backend-phi.vercel.app/quiz/?email=${user.email}`,
+        `https://quizzer-backend-three.vercel.app/quiz/?email=${user.email}`,
         {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         }
@@ -62,7 +62,7 @@ const LandingPage = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.delete(
-        `https://quizzer-backend-phi.vercel.app/quiz/${deleteId}`,
+        `https://quizzer-backend-three.vercel.app/quiz/${deleteId}`,
         {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         }
@@ -88,6 +88,13 @@ const LandingPage = () => {
           Explore Quizzes
         </h1>
         <div className="flex gap-3">
+          <button
+            onClick={() => navigate("/score")}
+            className="bg-gradient-to-r from-green-500 to-green-600 text-white px-5 py-2 rounded-2xl font-semibold hover:from-green-600 hover:to-green-700 shadow-lg transition-transform transform hover:scale-105"
+          >
+            My Scores
+          </button>
+
           {user.email !== "dipakmundhe2026@gmail.com" ? (
             <>
               {" "}

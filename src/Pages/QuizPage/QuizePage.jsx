@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 
 // Safe parsing from localStorage
 
@@ -15,7 +16,7 @@ const QuizePage = () => {
     if (!submitted) setAnswers((prev) => ({ ...prev, [index]: option }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const calculatedScore = ques.reduce(
       (acc, q, index) => (answers[index] === q.answer ? acc + 1 : acc),
       0
@@ -23,6 +24,33 @@ const QuizePage = () => {
     setScore(calculatedScore);
     setSubmitted(true);
     setShowModal(true);
+
+    try {
+      const user = JSON.parse(localStorage.getItem("user")); // contains email
+      const token = localStorage.getItem("token"); // stored separately
+
+      if (!user?.email || !token) {
+        console.error("User not logged in!");
+        return;
+      }
+
+      await axios.post(
+        "https://quizzer-backend-three.vercel.app/score/add", // <-- match your backend route
+        {
+          topic: quizTopic, // or dynamically pass topic
+          email: user.email,
+          score: calculatedScore,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log("Score stored successfully");
+    } catch (error) {
+      console.error("Error storing score:", error);
+    }
   };
 
   return (

@@ -11,10 +11,11 @@ const ProfilePage = () => {
     mobile: "+91 9876543210",
     age: 25,
     address: "123 Main Street, City, Country",
-    profilePic: "https://i.pravatar.cc/150?img=12", // placeholder
+    profilePic:
+      "https://i.pinimg.com/1200x/cd/4b/d9/cd4bd9b0ea2807611ba3a67c331bff0b.jpg", // placeholder
   };
 
-  const profileUrl = "https://i.pravatar.cc/150?img=12";
+  const profileUrl = "https://i.pinimg.com/1200x/cd/4b/d9/cd4bd9b0ea2807611ba3a67c331bff0b.jpg";
   const handleLogout = () => {
     // Clear user data and token from localStorage
     localStorage.removeItem("token");

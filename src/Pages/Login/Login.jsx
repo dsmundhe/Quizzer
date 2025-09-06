@@ -25,7 +25,7 @@ const Login = () => {
 
     try {
       setLoading(true);
-      const res = await axios.post("https://quizzer-backend-phi.vercel.app/user/login", {
+      const res = await axios.post("https://quizzer-backend-three.vercel.app/user/login", {
         email: formData.email,
         password: formData.password,
       });

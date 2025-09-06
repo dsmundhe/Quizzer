@@ -9,6 +9,7 @@ import AddQuizz from "./Pages/AddQuizz/AddQuizz";
 import QuizzPrompt from "./Pages/QuizzPrompt/QuizzPrompt";
 import QuizePage from "./Pages/QuizPage/QuizePage";
 import ProfilePage from "./Pages/Profile/ProfilePage";
+import MyScore from "./Pages/My_Scores/MyScore";
 
 // routes
 
@@ -27,6 +28,8 @@ const App = () => {
           <Route path="/addquiz" element={<AddQuizz />} />
           <Route path="/quizeprompt" element={<QuizzPrompt />} />
           <Route path="/quiz" element={<QuizePage />} />
+
+          <Route path="/score" element={<MyScore />} />
         </Routes>
       </BrowserRouter>
     </div>

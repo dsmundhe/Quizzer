@@ -36,7 +36,7 @@ const Signup = () => {
       setLoading(true);
 
       const res = await axios.post(
-        "https://quizzer-backend-phi.vercel.app/user/signup",
+        "https://quizzer-backend-three.vercel.app/user/signup",
         {
           name: formData.name,
           email: formData.email,
