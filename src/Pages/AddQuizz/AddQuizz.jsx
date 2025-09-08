@@ -153,13 +153,13 @@ Now generate a **questions array of exactly 30 questions** for the topic: "${for
           </div>
 
           {/* Copy Prompt Button */}
-          <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 mb-1 sm:mb-2">
+          <div className="flex flex-col items-end gap-2 mb-2">
             {/* Copy Button */}
             <button
               type="button"
               onClick={handleCopy}
               disabled={!formData.topic}
-              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-400 hover:to-blue-300 text-white font-semibold shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-400 hover:to-blue-300 text-white font-semibold shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {copied ? (
                 <>
@@ -172,17 +172,22 @@ Now generate a **questions array of exactly 30 questions** for the topic: "${for
               )}
             </button>
 
-            {/* GPT Button – Only show when copied */}
+            {/* AI Buttons – Only show when copied */}
             {copied && (
-              <a
-                href="https://chat.openai.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-black hover:bg-gray-800 text-white font-semibold shadow-md transition"
-              >
-                <SiOpenai className="text-white text-lg" />
-                Go to GPT
-              </a>
+              <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-2">
+                {/* ChatGPT */}
+                <a
+                  href="https://chat.openai.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 rounded-xl bg-black hover:bg-gray-800 text-white font-semibold shadow-md transition"
+                >
+                  <SiOpenai className="text-white text-lg" />
+                  GPT
+                </a>
+ 
+                
+              </div>
             )}
           </div>
 
