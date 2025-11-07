@@ -2,97 +2,175 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 const Home = () => {
-  const user = localStorage.getItem("user");
+  const user = JSON.parse(localStorage.getItem("user")); // ✅ to access name/email
+  const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : "U";
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-blue-100 flex flex-col">
-      {/* Navbar */}
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-indigo-50 via-white to-blue-100">
 
-      {/* Hero Section */}
-      <main className="flex flex-1 flex-col items-center justify-center text-center px-6 py-12">
-        <h2 className="text-3xl md:text-5xl font-extrabold text-gray-800 leading-tight">
-          Master Your Knowledge with{" "}
-          <span className="text-indigo-600">Quizzer</span>
-        </h2>
-        <p className="mt-4 text-base md:text-lg text-gray-600 max-w-xl md:max-w-2xl">
-          Challenge yourself with interactive quizzes, track your progress, and
-          grow your skills every day. Join thousands of learners and level up
-          your knowledge!
-        </p>
+      {/* NAVBAR */}
+      <nav className="w-full py-4 md:py-5 px-6 bg-white/80 backdrop-blur-md shadow-sm flex justify-between items-center sticky top-0 z-50 border-b border-gray-200">
+        <h1 className="text-xl md:text-2xl font-extrabold text-indigo-600 tracking-wide">
+          Quizzer
+        </h1>
 
-        {/* Call to Action */}
-        <div className="mt-8 flex flex-col sm:flex-row gap-4 sm:gap-6">
+        <div className="flex items-center gap-4">
+
+          {/* ✅ If user NOT logged in */}
           {!user ? (
             <>
-              {" "}
               <Link
                 to="/login"
-                className="px-6 py-3 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition text-sm md:text-base"
+                className="text-indigo-600 font-medium hover:text-indigo-700 transition text-sm md:text-base"
               >
-                Get Started
+                Login
               </Link>
+
               <Link
                 to="/signup"
-                className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg shadow hover:bg-gray-300 transition text-sm md:text-base"
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition text-sm md:text-base"
               >
-                Create Account
+                Sign Up
               </Link>
             </>
           ) : (
             <>
-              {" "}
+              {/* ✅ Dashboard Button */}
+
+              
               <Link
                 to="/landingpage"
-                className="px-6 py-3 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition text-sm md:text-base"
+                className="hidden sm:block px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition text-sm md:text-base"
               >
-                Explore Quizzes
+                Dashboard
               </Link>
+
+              {/* ✅ Profile Avatar */}
               <Link
-                to="/landingpage"
-                className="px-6 py-3 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition text-sm md:text-base"
+                to="/profile"
+                className="w-10 h-10 flex items-center justify-center bg-indigo-600 text-white rounded-full shadow hover:bg-indigo-700 transition font-semibold text-sm cursor-pointer"
+                title="Profile"
               >
-                Add Quiz
+                {userInitial}
               </Link>
             </>
           )}
+
+        </div>
+      </nav>
+
+      {/* HERO SECTION */}
+      <main className="flex flex-1 flex-col-reverse lg:flex-row items-center justify-center gap-10 px-6 py-16 lg:py-24 max-w-7xl mx-auto">
+
+        {/* TEXT */}
+        <div className="text-center lg:text-left max-w-xl">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-800 leading-tight">
+            Master Your Knowledge with{" "}
+            <span className="text-indigo-600">Quizzer</span>
+          </h2>
+
+          <p className="mt-4 text-base sm:text-lg text-gray-600">
+            Challenge yourself with interactive quizzes, track your progress,
+            and grow your skills every day. Join thousands of learners and level
+            up your knowledge effortlessly.
+          </p>
+
+          {/* CTA BUTTONS */}
+          <div className="mt-8 flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center lg:justify-start">
+
+            {!user ? (
+              <>
+                <Link
+                  to="/login"
+                  className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg text-sm md:text-base transition transform hover:scale-105"
+                >
+                  Get Started
+                </Link>
+
+                <Link
+                  to="/signup"
+                  className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl shadow-md text-sm md:text-base transition transform hover:scale-105"
+                >
+                  Create Account
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/landingpage"
+                  className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg text-sm md:text-base transition transform hover:scale-105"
+                >
+                  Explore Quizzes
+                </Link>
+
+                <Link
+                  to="/addquiz"
+                  className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg text-sm md:text-base transition transform hover:scale-105"
+                >
+                  Add Quiz
+                </Link>
+
+                  <Link
+                to="/score"
+                 className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg text-sm md:text-base transition transform hover:scale-105"
+              >
+                Performance
+              </Link>
+              </>
+            )}
+
+          </div>
+        </div>
+
+        {/* ILLUSTRATION */}
+        <div className="w-full max-w-md lg:max-w-lg flex justify-center">
+          <img
+            src="https://i.pinimg.com/736x/36/02/d1/3602d122eb57e762b0a1177b32c4c04f.jpg"
+            alt="Quiz Illustration"
+            className="w-72 sm:w-80 lg:w-96 "
+          />
         </div>
       </main>
 
-      {/* Features Section */}
-      <section className="py-12 md:py-16 bg-white">
-        <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-10 text-center">
-          <div className="p-6 border rounded-xl shadow-sm hover:shadow-md transition bg-white">
-            <h3 className="text-lg md:text-xl font-semibold text-indigo-600 mb-3">
+      {/* FEATURES */}
+      <section className="py-14 bg-white border-t border-gray-200">
+        <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 text-center">
+
+          <div className="p-6 bg-white border rounded-2xl shadow-sm hover:shadow-xl transition transform hover:-translate-y-1">
+            <h3 className="text-xl font-semibold text-indigo-600 mb-3">
               🎯 Interactive Quizzes
             </h3>
-            <p className="text-sm md:text-base text-gray-600">
-              Test your knowledge with fun, engaging, and timed quizzes.
+            <p className="text-gray-600">
+              Test your knowledge with fun, engaging, and real-time quizzes built just for you.
             </p>
           </div>
 
-          <div className="p-6 border rounded-xl shadow-sm hover:shadow-md transition bg-white">
-            <h3 className="text-lg md:text-xl font-semibold text-indigo-600 mb-3">
-              📊 Track Progress
+          <div className="p-6 bg-white border rounded-2xl shadow-sm hover:shadow-xl transition transform hover:-translate-y-1">
+            <h3 className="text-xl font-semibold text-indigo-600 mb-3">
+              📊 Track Your Progress
             </h3>
-            <p className="text-sm md:text-base text-gray-600">
-              Keep track of your scores, performance, and improvements.
+            <p className="text-gray-600">
+              View detailed performance analytics and grow consistently with each attempt.
             </p>
           </div>
 
-          <div className="p-6 border rounded-xl shadow-sm hover:shadow-md transition bg-white sm:col-span-2 md:col-span-1">
-            <h3 className="text-lg md:text-xl font-semibold text-indigo-600 mb-3">
-              🚀 Compete & Learn
+          <div className="p-6 bg-white border rounded-2xl shadow-sm hover:shadow-xl transition transform hover:-translate-y-1">
+            <h3 className="text-xl font-semibold text-indigo-600 mb-3">
+              🚀 Compete & Improve
             </h3>
-            <p className="text-sm md:text-base text-gray-600">
-              Compete with friends and discover new topics to master.
+            <p className="text-gray-600">
+              Challenge yourself or compare with friends to stay motivated and keep improving.
             </p>
           </div>
+
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-indigo-600 text-white py-4 md:py-6 text-center text-sm md:text-base">
-        <p>© {new Date().getFullYear()} Quizzer. All rights reserved.</p>
+      {/* FOOTER */}
+      <footer className="bg-indigo-600 text-white py-5 text-center text-sm md:text-base mt-auto">
+        <p>© {new Date().getFullYear()} Quizzer • All Rights Reserved.</p>
       </footer>
+
     </div>
   );
 };

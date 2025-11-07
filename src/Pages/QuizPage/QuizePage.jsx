@@ -8,18 +8,31 @@ const QuizePage = () => {
   const ques = JSON.parse(localStorage.getItem("questions") || "[]");
   const quizTitle = localStorage.getItem("quizTitle") || "Quiz";
   const quizTopic = localStorage.getItem("quizTopic") || "Topic";
+
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState(0);
   const [showModal, setShowModal] = useState(false);
 
-  const handleSelect = (index, option) => {
-    if (!submitted) setAnswers((prev) => ({ ...prev, [index]: option }));
+  const [index, setIndex] = useState(0); // TRACK CURRENT QUESTION
+
+  const currentQuestion = ques[index];
+
+  const handleSelect = (option) => {
+    if (!submitted) {
+      setAnswers((prev) => ({ ...prev, [index]: option }));
+    }
+  };
+
+  const handleNext = () => {
+    if (index < ques.length - 1) {
+      setIndex(index + 1);
+    }
   };
 
   const handleSubmit = async () => {
     const calculatedScore = ques.reduce(
-      (acc, q, index) => (answers[index] === q.answer ? acc + 1 : acc),
+      (acc, q, idx) => (answers[idx] === q.answer ? acc + 1 : acc),
       0
     );
     setScore(calculatedScore);
@@ -44,22 +57,19 @@ const QuizePage = () => {
           email: user.email,
           score: calculatedScore,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       toast.success("✅ Score saved successfully!", { id: loadingToast });
     } catch (error) {
-      console.error("Error storing score:", error);
-      toast.error("❌ Failed to save score!", { id: loadingToast });
+      console.error(error);
+      toast.error("❌ Failed to save score!");
     }
   };
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-b from-blue-100 to-indigo-50 flex flex-col">
+
       {/* Header */}
       <header className="w-full py-6 bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md">
         <h1 className="text-center text-white text-3xl sm:text-4xl font-bold drop-shadow-lg">
@@ -68,72 +78,83 @@ const QuizePage = () => {
         <p className="text-center text-blue-100 mt-1 sm:text-lg">{quizTopic}</p>
       </header>
 
-      {/* Quiz Content */}
-      <main className="flex-1 w-full flex justify-center items-start px-4 py-8 overflow-auto">
-        <div className="w-full max-w-4xl p-6 sm:p-10 bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-blue-200">
-          {ques.length ? (
-            <div className="space-y-6 max-h-[75vh] overflow-y-auto pr-2">
-              {ques.map((q, index) => (
-                <div
-                  key={index}
-                  className="p-4 sm:p-5 rounded-2xl bg-white/60 border border-blue-200 shadow-md hover:shadow-lg transition duration-300"
-                >
-                  <p className="font-semibold text-blue-800 mb-3 text-sm sm:text-base">
-                    {index + 1}. {q.question}
-                  </p>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    {q.options.map((option, i) => {
-                      let bgColor = "";
-                      if (submitted) {
-                        if (option === q.answer)
-                          bgColor = "bg-green-200 font-semibold";
-                        else if (answers[index] === option)
-                          bgColor = "bg-red-200 font-semibold";
-                        else bgColor = "bg-white";
-                      } else {
-                        bgColor =
-                          answers[index] === option
-                            ? "bg-blue-200 font-semibold scale-105 shadow-inner"
-                            : "hover:bg-blue-50 hover:scale-105";
-                      }
+      {/* BODY */}
+      <main className="flex-1 w-full flex justify-center items-start px-4 py-8">
+        <div className="w-full max-w-3xl p-6 sm:p-10 bg-white/80 backdrop-blur-md rounded-3xl shadow-xl border border-blue-200">
 
-                      return (
-                        <label
-                          key={i}
-                          className={`flex items-center gap-3 p-2 sm:p-3 rounded-xl cursor-pointer transition-all duration-200 transform ${bgColor}`}
-                        >
-                          <input
-                            type="radio"
-                            name={`question-${index}`}
-                            value={option}
-                            checked={answers[index] === option}
-                            onChange={() => handleSelect(index, option)}
-                            className="accent-blue-500 w-4 h-4 sm:w-5 sm:h-5"
-                            disabled={submitted}
-                          />
-                          <span className="text-blue-900 text-sm sm:text-base">
-                            {option}
-                          </span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
+          {/* PROGRESS BAR */}
+          <div className="mb-6">
+            <div className="flex justify-between text-sm font-semibold text-blue-800 mb-2">
+              <span>Question {index + 1} / {ques.length}</span>
+              <span>{Object.keys(answers).length} Attempted</span>
             </div>
-          ) : (
-            <h1 className="text-center text-blue-700 font-semibold">
-              No Questions Available!
-            </h1>
+            <div className="w-full bg-blue-100 h-2 rounded-full">
+              <div
+                className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"
+                style={{ width: `${((index + 1) / ques.length) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+
+          {/* SINGLE QUESTION */}
+          {currentQuestion && (
+            <div className="p-5 rounded-2xl bg-white/70 border border-blue-200 shadow-md transition">
+              <p className="font-semibold text-blue-800 mb-4 text-lg">
+                {index + 1}. {currentQuestion.question}
+              </p>
+
+              <div className="grid gap-4">
+                {currentQuestion.options.map((option, i) => {
+                  const isSelected = answers[index] === option;
+
+                  return (
+                    <label
+                      key={i}
+                      onClick={() => handleSelect(option)}
+                      className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer border transition-all 
+                        ${isSelected ? "bg-blue-200 border-blue-500 shadow-inner" : "bg-white border-gray-200 hover:bg-blue-50"}
+                      `}
+                    >
+                      <input
+                        type="radio"
+                        checked={isSelected}
+                        className="accent-blue-600 w-5 h-5"
+                        readOnly
+                      />
+                      <span className="text-blue-900">{option}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
           )}
 
-          <div className="mt-8 text-center">
-            {!submitted && ques.length > 0 && (
+          {/* NAV BUTTONS */}
+          <div className="mt-8 flex justify-between">
+            {/* PREV BUTTON */}
+            {index > 0 && (
+              <button
+                onClick={() => setIndex(index - 1)}
+                className="px-6 py-3 bg-gray-300 text-gray-900 rounded-xl font-semibold hover:bg-gray-400 transition"
+              >
+                Previous
+              </button>
+            )}
+
+            {/* NEXT OR SUBMIT */}
+            {index === ques.length - 1 ? (
               <button
                 onClick={handleSubmit}
-                className="w-full sm:w-auto px-6 py-3 sm:px-8 sm:py-4 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-indigo-400 hover:to-blue-400 text-white font-semibold shadow-lg text-base sm:text-lg transition-transform transform hover:scale-105"
+                className="ml-auto px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold shadow-lg hover:scale-105 transition"
               >
                 Submit Quiz
+              </button>
+            ) : (
+              <button
+                onClick={handleNext}
+                className="ml-auto px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-semibold shadow-lg hover:scale-105 transition"
+              >
+                Next
               </button>
             )}
           </div>
@@ -141,52 +162,34 @@ const QuizePage = () => {
       </main>
 
       {/* Footer */}
-      <footer className="w-full py-4 bg-blue-500 text-white text-center text-sm sm:text-base">
-        Quiz App &copy; {new Date().getFullYear()}
+      <footer className="w-full py-4 bg-blue-500 text-white text-center">
+        Quiz App © {new Date().getFullYear()}
       </footer>
 
       {/* Result Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-3xl p-6 sm:p-10 max-w-md w-full shadow-2xl relative border-4 border-gradient-to-r from-blue-400 to-indigo-500 animate-slideIn">
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center shadow-lg animate-bounce">
-                <span className="text-white text-3xl font-bold">🎉</span>
-              </div>
-            </div>
-
-            <h2 className="text-2xl sm:text-3xl font-bold text-blue-700 mb-2 text-center drop-shadow-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-10 max-w-md w-full shadow-2xl border-4 border-blue-300 animate-slideUp">
+            <h2 className="text-3xl font-bold text-blue-700 text-center mb-4">
               Quiz Result
             </h2>
 
-            <p className="text-lg sm:text-xl text-blue-900 mb-6 text-center">
-              You scored{" "}
-              <span className="font-bold text-green-600">{score}</span> /{" "}
-              {ques.length}
-            </p>
-
-            <p className="text-md sm:text-lg text-blue-800 mb-6 text-center">
-              {score === ques.length
-                ? "Perfect! You nailed it! 🎯"
-                : score >= ques.length / 2
-                ? "Great job! Keep practicing! 👍"
-                : "Don't worry! Try again to improve! 💪"}
+            <p className="text-xl text-blue-900 text-center mb-4">
+              You scored <span className="font-bold text-green-600">{score}</span> / {ques.length}
             </p>
 
             <button
               onClick={() => setShowModal(false)}
-              className="w-full px-6 py-3 sm:px-8 sm:py-4 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-indigo-400 hover:to-blue-400 text-white font-semibold shadow-lg transition-transform transform hover:scale-105"
+              className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold shadow-md hover:scale-105 transition mb-4"
             >
               Close
             </button>
+
             <button
-              className="w-full px-6 py-3 mt-5 sm:px-8 sm:py-4 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-indigo-400 hover:to-blue-400 text-white font-semibold shadow-lg transition-transform transform hover:scale-105"
-              onClick={() => {
-                setShowModal(false);
-                navigate("/score");
-              }}
+              onClick={() => navigate("/score")}
+              className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold shadow-md hover:scale-105 transition"
             >
-              Go Scores
+              View Scoreboard
             </button>
           </div>
         </div>
