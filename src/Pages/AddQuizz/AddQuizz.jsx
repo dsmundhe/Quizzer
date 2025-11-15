@@ -7,15 +7,21 @@ import { useNavigate } from "react-router-dom";
 
 const AddQuizz = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ title: "", topic: "", apiData: "" });
+  const [formData, setFormData] = useState({
+    title: "",
+    topic: "",
+    apiData: "",
+  });
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
   const [useManualAPI, setUseManualAPI] = useState(false);
+  const [message, setMessage] = useState("");
 
-  const GEMINI_API_KEY = "AIzaSyBPhI2LOjmQy819BP8xSplsoo1gFT8bCZY";
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`;
+  const GEMINI_API_KEY = "AIzaSyDNIDMo9kELX3nrJDDXPYEpMB_TqjVud-s";
+
+  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
   const generatePrompt = (topic) => `
 Generate only a valid JSON array with EXACTLY 30 MCQ questions.
@@ -40,7 +46,7 @@ Return ONLY the JSON array.
   const copyPrompt = () => {
     const prompt = generatePrompt(formData.topic);
     navigator.clipboard.writeText(prompt);
-    alert("Prompt copied!");
+    setMessage("Prompt Copied!");
   };
 
   const extractJsonArray = (text) => {
@@ -55,21 +61,43 @@ Return ONLY the JSON array.
     }
   };
 
-  const generateQuizFromGemini = async (topic) => {
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents: [{ parts: [{ text: generatePrompt(topic) }] }] }),
-    });
+  const generateQuizFromGemini = async (topic, retry = 0) => {
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: generatePrompt(topic) }] }],
+        }),
+      });
 
-    const data = await response.json();
-    const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!raw) throw new Error("Invalid response from Gemini");
+      // AUTO RETRY WHEN 429
+      if (response.status === 429 && retry < 3) {
+        console.warn("⚠ Rate limited! Retrying in 1.5 sec...");
+        await new Promise((r) => setTimeout(r, 1500));
+        return generateQuizFromGemini(topic, retry + 1);
+      }
 
-    const parsedArray = extractJsonArray(raw);
-    if (!Array.isArray(parsedArray)) throw new Error("Output must be array");
+      const data = await response.json();
+      console.log("🔥 Gemini Output:", data);
 
-    return parsedArray;
+      const raw =
+        data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+        data?.candidates?.[0]?.content?.parts?.[0]?.textContent;
+
+      if (!raw) throw new Error("Invalid response from Gemini");
+
+      const parsedArray = extractJsonArray(raw);
+
+      if (!Array.isArray(parsedArray)) {
+        throw new Error("Generated output must be a JSON array");
+      }
+
+      return parsedArray;
+    } catch (err) {
+      console.error("❌ Gemini Error:", err);
+      throw err;
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -87,7 +115,8 @@ Return ONLY the JSON array.
 
       if (useManualAPI) {
         finalQuestions = JSON.parse(formData.apiData);
-        if (!Array.isArray(finalQuestions)) throw new Error("Manual API must be an array");
+        if (!Array.isArray(finalQuestions))
+          throw new Error("Manual API must be an array");
       } else {
         finalQuestions = await generateQuizFromGemini(formData.topic.trim());
       }
@@ -118,33 +147,50 @@ Return ONLY the JSON array.
       {loading && (
         <div className="absolute inset-0 flex flex-col justify-center items-center bg-white/80 backdrop-blur-md z-50">
           <div className="w-20 h-20 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-          <h2 className="mt-6 text-2xl font-bold text-blue-700 animate-pulse">Generating Your Quiz…</h2>
+          <h2 className="mt-6 text-2xl font-bold text-blue-700 animate-pulse">
+            Generating Your Quiz…
+          </h2>
           <div className="mt-4 w-64 h-3 rounded-full bg-gradient-to-r from-blue-300 via-blue-200 to-blue-300 animate-[shimmer_2s_infinite]"></div>
         </div>
       )}
 
       {!loading && (
         <div className="bg-white shadow-xl rounded-3xl w-full max-w-lg p-8 border border-blue-200">
-          <h2 className="text-3xl font-bold text-blue-700 text-center mb-8">Add New Quiz</h2>
+          <div className="flex items-center flex-col">
+            <h2 className="text-3xl font-bold text-blue-700 text-center mb-4">
+              Add New Quiz
+            </h2>
 
+            <span className="flex items-center content-center text-red-700">
+              {message}
+            </span>
+          </div>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-blue-700 font-medium mb-2">Quiz Title</label>
+              <label className="block text-blue-700 font-medium mb-2">
+                Quiz Title
+              </label>
               <input
                 type="text"
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
                 required
                 className="w-full px-4 py-3 border border-blue-200 rounded-xl bg-blue-50 text-blue-900"
               />
             </div>
 
             <div>
-              <label className="block text-blue-700 font-medium mb-2">Quiz Topic</label>
+              <label className="block text-blue-700 font-medium mb-2">
+                Quiz Topic
+              </label>
               <input
                 type="text"
                 value={formData.topic}
-                onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, topic: e.target.value })
+                }
                 required
                 className="w-full px-4 py-3 border border-blue-200 rounded-xl bg-blue-50 text-blue-900"
               />
@@ -161,7 +207,9 @@ Return ONLY the JSON array.
 
             {/* Toggle between Gemini / Manual */}
             <div className="flex items-center justify-between bg-blue-50 p-3 rounded-xl">
-              <span className="text-blue-700 font-medium">Use Manual API Input</span>
+              <span className="text-blue-700 font-medium">
+                Use Manual API Input
+              </span>
               <input
                 type="checkbox"
                 checked={useManualAPI}
@@ -176,7 +224,9 @@ Return ONLY the JSON array.
                 rows="6"
                 placeholder="Paste your JSON array here"
                 value={formData.apiData}
-                onChange={(e) => setFormData({ ...formData, apiData: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, apiData: e.target.value })
+                }
                 className="w-full px-4 py-3 border border-blue-300 rounded-xl bg-blue-50 text-blue-900"
               ></textarea>
             )}
@@ -188,8 +238,12 @@ Return ONLY the JSON array.
               Submit Quiz
             </button>
 
-            {success && <p className="text-green-600 text-center text-lg">{success}</p>}
-            {error && <p className="text-red-600 text-center text-lg">{error}</p>}
+            {success && (
+              <p className="text-green-600 text-center text-lg">{success}</p>
+            )}
+            {error && (
+              <p className="text-red-600 text-center text-lg">{error}</p>
+            )}
           </form>
         </div>
       )}
