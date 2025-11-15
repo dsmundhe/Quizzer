@@ -1,25 +1,24 @@
+// Updated AddQuizz Component with two options: (1) Generate via Gemini, (2) Add API manually
+// Also includes "Copy Prompt" button to copy Gemini prompt based on topic.
+
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const AddQuizz = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    title: "",
-    topic: "",
-  });
+  const [formData, setFormData] = useState({ title: "", topic: "", apiData: "" });
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const [useManualAPI, setUseManualAPI] = useState(false);
 
   const GEMINI_API_KEY = "AIzaSyBPhI2LOjmQy819BP8xSplsoo1gFT8bCZY";
-  const API_URL =
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=" +
-    GEMINI_API_KEY;
+  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`;
 
   const generatePrompt = (topic) => `
-Generate only a valid JSON array named "questions" with EXACTLY 30 MCQ questions.
+Generate only a valid JSON array with EXACTLY 30 MCQ questions.
 
 Each item format:
 {
@@ -28,7 +27,7 @@ Each item format:
   "answer": "Correct option"
 }
 
-✅ STRICT RULES:
+STRICT RULES:
 - Exactly 30 questions
 - Each question must have exactly 4 options
 - Answer must match one of the options
@@ -38,21 +37,20 @@ Each item format:
 Return ONLY the JSON array.
 `;
 
+  const copyPrompt = () => {
+    const prompt = generatePrompt(formData.topic);
+    navigator.clipboard.writeText(prompt);
+    alert("Prompt copied!");
+  };
+
   const extractJsonArray = (text) => {
     try {
       let cleaned = text.replace(/```json|```/g, "").trim();
-
       const start = cleaned.indexOf("[");
       const end = cleaned.lastIndexOf("]") + 1;
-
-      if (start === -1 || end === -1) {
-        throw new Error("No JSON array found in Gemini output");
-      }
-
-      const arrayText = cleaned.substring(start, end);
-      return JSON.parse(arrayText);
+      if (start === -1 || end === -1) throw new Error("No JSON array found");
+      return JSON.parse(cleaned.substring(start, end));
     } catch (err) {
-      console.error("❌ JSON Extraction Failed:", err);
       throw new Error("Gemini returned invalid JSON array.");
     }
   };
@@ -61,22 +59,15 @@ Return ONLY the JSON array.
     const response = await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: generatePrompt(topic) }] }],
-      }),
+      body: JSON.stringify({ contents: [{ parts: [{ text: generatePrompt(topic) }] }] }),
     });
 
     const data = await response.json();
-
     const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
     if (!raw) throw new Error("Invalid response from Gemini");
 
     const parsedArray = extractJsonArray(raw);
-
-    if (!Array.isArray(parsedArray)) {
-      throw new Error("Generated testApis must be an array.");
-    }
+    if (!Array.isArray(parsedArray)) throw new Error("Output must be array");
 
     return parsedArray;
   };
@@ -90,12 +81,16 @@ Return ONLY the JSON array.
     try {
       const user = JSON.parse(localStorage.getItem("user"));
       const token = localStorage.getItem("token");
+      if (!user?.email) throw new Error("User email missing");
 
-      if (!user || !user.email) throw new Error("User email missing");
+      let finalQuestions;
 
-      const generatedQuestions = await generateQuizFromGemini(
-        formData.topic.trim()
-      );
+      if (useManualAPI) {
+        finalQuestions = JSON.parse(formData.apiData);
+        if (!Array.isArray(finalQuestions)) throw new Error("Manual API must be an array");
+      } else {
+        finalQuestions = await generateQuizFromGemini(formData.topic.trim());
+      }
 
       await axios.post(
         "https://quizzer-backend-three.vercel.app/quiz",
@@ -103,22 +98,16 @@ Return ONLY the JSON array.
           email: user.email,
           title: formData.title,
           topic: formData.topic,
-          testApis: generatedQuestions,
+          testApis: finalQuestions,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setSuccess("✅ Quiz added successfully!");
+      setSuccess("Quiz added successfully!");
       navigate("/landingpage");
-
-      setFormData({ title: "", topic: "" });
+      setFormData({ title: "", topic: "", apiData: "" });
     } catch (err) {
-      console.error(err);
-      setError(err.message || "❌ Something went wrong!");
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -126,87 +115,81 @@ Return ONLY the JSON array.
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100 px-4">
-      {/* ✅ FULL SCREEN LOADER WHEN LOADING */}
       {loading && (
         <div className="absolute inset-0 flex flex-col justify-center items-center bg-white/80 backdrop-blur-md z-50">
-          {/* Spinner */}
           <div className="w-20 h-20 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-
-          {/* Text */}
-          <h2 className="mt-6 text-2xl font-bold text-blue-700 animate-pulse">
-            Generating Your Quiz…
-          </h2>
-
-          {/* Shimmer line */}
+          <h2 className="mt-6 text-2xl font-bold text-blue-700 animate-pulse">Generating Your Quiz…</h2>
           <div className="mt-4 w-64 h-3 rounded-full bg-gradient-to-r from-blue-300 via-blue-200 to-blue-300 animate-[shimmer_2s_infinite]"></div>
-
-          <style>
-            {`
-              @keyframes shimmer {
-                0% { background-position: -200px 0; }
-                100% { background-position: 200px 0; }
-              }
-            `}
-          </style>
         </div>
       )}
 
-      {/* ✅ HIDE FORM WHEN LOADING */}
       {!loading && (
         <div className="bg-white shadow-xl rounded-3xl w-full max-w-lg p-8 border border-blue-200">
-          <h2 className="text-3xl font-bold text-blue-700 text-center mb-8">
-            Add New Quiz
-          </h2>
+          <h2 className="text-3xl font-bold text-blue-700 text-center mb-8">Add New Quiz</h2>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-blue-700 font-medium mb-2">
-                Quiz Title
-              </label>
+              <label className="block text-blue-700 font-medium mb-2">Quiz Title</label>
               <input
                 type="text"
-                name="title"
                 value={formData.title}
-                onChange={(e) =>
-                  setFormData((p) => ({ ...p, title: e.target.value }))
-                }
-                placeholder="Enter quiz title"
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 required
-                className="w-full px-4 py-3 border border-blue-200 rounded-xl bg-blue-50 text-blue-900 focus:ring-2 focus:ring-blue-400 outline-none"
+                className="w-full px-4 py-3 border border-blue-200 rounded-xl bg-blue-50 text-blue-900"
               />
             </div>
 
             <div>
-              <label className="block text-blue-700 font-medium mb-2">
-                Quiz Topic
-              </label>
+              <label className="block text-blue-700 font-medium mb-2">Quiz Topic</label>
               <input
                 type="text"
-                name="topic"
                 value={formData.topic}
-                onChange={(e) =>
-                  setFormData((p) => ({ ...p, topic: e.target.value }))
-                }
-                placeholder="Enter quiz topic"
+                onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
                 required
-                className="w-full px-4 py-3 border border-blue-200 rounded-xl bg-blue-50 text-blue-900 focus:ring-2 focus:ring-blue-400 outline-none"
+                className="w-full px-4 py-3 border border-blue-200 rounded-xl bg-blue-50 text-blue-900"
               />
             </div>
 
+            {/* Copy Prompt Button */}
+            <button
+              type="button"
+              onClick={copyPrompt}
+              className="w-full py-2 rounded-xl text-blue-700 border border-blue-400 hover:bg-blue-50"
+            >
+              Copy Prompt for Topic
+            </button>
+
+            {/* Toggle between Gemini / Manual */}
+            <div className="flex items-center justify-between bg-blue-50 p-3 rounded-xl">
+              <span className="text-blue-700 font-medium">Use Manual API Input</span>
+              <input
+                type="checkbox"
+                checked={useManualAPI}
+                onChange={() => setUseManualAPI(!useManualAPI)}
+                className="w-5 h-5"
+              />
+            </div>
+
+            {/* Manual API Input */}
+            {useManualAPI && (
+              <textarea
+                rows="6"
+                placeholder="Paste your JSON array here"
+                value={formData.apiData}
+                onChange={(e) => setFormData({ ...formData, apiData: e.target.value })}
+                className="w-full px-4 py-3 border border-blue-300 rounded-xl bg-blue-50 text-blue-900"
+              ></textarea>
+            )}
+
             <button
               type="submit"
-              disabled={loading}
-              className="w-full py-3 rounded-xl font-semibold text-white shadow-md bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-400 hover:to-blue-300"
+              className="w-full py-3 rounded-xl font-semibold text-white shadow-md bg-gradient-to-r from-blue-500 to-blue-400"
             >
               Submit Quiz
             </button>
 
-            {success && (
-              <p className="text-green-600 text-center text-lg">{success}</p>
-            )}
-            {error && (
-              <p className="text-red-600 text-center text-lg">{error}</p>
-            )}
+            {success && <p className="text-green-600 text-center text-lg">{success}</p>}
+            {error && <p className="text-red-600 text-center text-lg">{error}</p>}
           </form>
         </div>
       )}
